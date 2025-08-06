@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Peladas Manager
 
 Um sistema web para organização de peladas (jogos de futebol).
@@ -61,3 +62,6 @@ cd frontend
 npm install
 npm run dev
 ```
+=======
+# peladas-manager
+>>>>>>> 843658e22de6911cf22f287869e96c05ae4fffc8
