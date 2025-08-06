@@ -1,0 +1,20 @@
+# FastAPI - Framework web moderno e rápido para Python
+fastapi==0.104.1
+
+# Uvicorn - Servidor ASGI para rodar o FastAPI
+uvicorn[standard]==0.24.0
+
+# SQLAlchemy - ORM (Object-Relational Mapping) para banco de dados
+sqlalchemy==2.0.23
+
+# Pydantic - Validação de dados e serialização
+pydantic==2.5.0
+
+# Python-multipart - Para upload de arquivos (se precisarmos)
+python-multipart==0.0.6
+
+# CORS - Para permitir requisições do frontend (já incluído no FastAPI)
+# python-cors==1.7.0
+
+# Databases - Para conexão assíncrona com banco (vamos usar síncrona por simplicidade)
+# databases[sqlite]==0.8.0
