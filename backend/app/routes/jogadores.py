@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.database import get_db
-from app.models.database import Jogador
+from app.models.entities import Jogador
 from app.schemas import JogadorCreate, JogadorUpdate, JogadorResponse
 
 # Cria o router para agrupar rotas de jogadores

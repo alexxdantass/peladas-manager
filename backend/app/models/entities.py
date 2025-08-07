@@ -1,5 +1,5 @@
 """
-Modelos de banco de dados usando SQLAlchemy
+Entidades/Modelos de banco de dados usando SQLAlchemy
 Aqui definimos como os dados serão estruturados no banco
 """
 

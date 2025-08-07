@@ -5,7 +5,7 @@ Aqui definimos como conectar e criar as tabelas
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models.database import Base
+from app.models.entities import Base
 
 # URL do banco SQLite - arquivo local
 # sqlite:/// significa arquivo local
