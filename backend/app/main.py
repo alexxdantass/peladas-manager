@@ -24,7 +24,7 @@ create_tables()
 # CORS = Cross-Origin Resource Sharing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # URL do frontend React
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # URLs do frontend React
     allow_credentials=True,
     allow_methods=["*"],  # Permite GET, POST, PUT, DELETE, etc.
     allow_headers=["*"],  # Permite todos os headers

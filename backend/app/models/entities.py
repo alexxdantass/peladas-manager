@@ -6,11 +6,15 @@ Aqui definimos como os dados serão estruturados no banco
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Date, Text, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 
 # Base para todos os modelos - padrão SQLAlchemy
 Base = declarative_base()
+
+# Helper function para substituir datetime.utcnow (depreciado)
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Jogador(Base):
     """
@@ -27,7 +31,7 @@ class Jogador(Base):
     posicao_preferida = Column(String(50), nullable=True)  # Goleiro, Atacante, etc.
     nivel_habilidade = Column(Integer, default=5)  # 1-10, padrão 5
     ativo = Column(Boolean, default=True)  # Se o jogador está ativo
-    data_cadastro = Column(DateTime, default=datetime.utcnow)  # Quando foi cadastrado
+    data_cadastro = Column(DateTime, default=utc_now)  # Quando foi cadastrado
     
     # Relacionamentos (definiremos depois)
     # participacoes = relationship("Participacao", back_populates="jogador")
@@ -48,7 +52,7 @@ class Participacao(Base):
     pelada_id = Column(Integer, ForeignKey("peladas.id"), nullable=False)
     confirmado = Column(Boolean, default=False)  # Se confirmou presença
     time = Column(String(1), nullable=True)  # 'A' ou 'B' quando dividir times
-    data_inscricao = Column(DateTime, default=datetime.utcnow)
+    data_inscricao = Column(DateTime, default=utc_now)
     
     # Relacionamentos
     # jogador = relationship("Jogador", back_populates="participacoes")
@@ -93,8 +97,8 @@ class Pelada(Base):
     
     # Status e timestamps
     status = Column(Enum(StatusPelada), default=StatusPelada.PLANEJADA, nullable=False)
-    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
-    data_atualizacao = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    data_criacao = Column(DateTime, default=utc_now, nullable=False)
+    data_atualizacao = Column(DateTime, default=utc_now, onupdate=utc_now)
     
     # Relacionamentos
     partidas = relationship("Partida", back_populates="pelada", cascade="all, delete-orphan")
@@ -147,8 +151,8 @@ class Partida(Base):
     status = Column(Enum(StatusPartida), default=StatusPartida.AGENDADA, nullable=False)
     
     # Timestamps
-    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
-    data_atualizacao = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    data_criacao = Column(DateTime, default=utc_now, nullable=False)
+    data_atualizacao = Column(DateTime, default=utc_now, onupdate=utc_now)
     
     # Relacionamentos
     pelada = relationship("Pelada", back_populates="partidas")
@@ -194,7 +198,7 @@ class Gol(Base):
     descricao = Column(String(200), nullable=True)  # "Chute de fora da área", etc
     
     # Timestamps
-    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    data_criacao = Column(DateTime, default=utc_now, nullable=False)
     
     # Relacionamentos
     partida = relationship("Partida", back_populates="gols")

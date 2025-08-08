@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { AppBar, Toolbar, Typography } from '@mui/material';
+import { AppBar, Toolbar, Typography, Tabs, Tab, Box } from '@mui/material';
 import ListaJogadores from './components/ListaJogadores';
+import TelaPartida from './components/TelaPartida';
 
 // Tema do Material-UI (cores, tipografia, etc.)
 const theme = createTheme({
@@ -17,6 +18,12 @@ const theme = createTheme({
 });
 
 function App() {
+  const [tabAtual, setTabAtual] = useState(0);
+
+  const handleTabChange = (event: React.SyntheticEvent, novoTab: number) => {
+    setTabAtual(novoTab);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       {/* CssBaseline = reset CSS global */}
@@ -28,11 +35,24 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             ⚽ Peladas Manager
           </Typography>
+          <Tabs 
+            value={tabAtual} 
+            onChange={handleTabChange}
+            textColor="inherit"
+            indicatorColor="secondary"
+            sx={{ ml: 2 }}
+          >
+            <Tab label="Jogadores" />
+            <Tab label="Partida" />
+          </Tabs>
         </Toolbar>
       </AppBar>
 
       {/* Conteúdo principal */}
-      <ListaJogadores />
+      <Box sx={{ p: 3 }}>
+        {tabAtual === 0 && <ListaJogadores />}
+        {tabAtual === 1 && <TelaPartida partidaId={1} />}
+      </Box>
     </ThemeProvider>
   );
 }
