@@ -3,10 +3,11 @@ Entidades/Modelos de banco de dados usando SQLAlchemy
 Aqui definimos como os dados serão estruturados no banco
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Date, Text, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import enum
 
 # Base para todos os modelos - padrão SQLAlchemy
 Base = declarative_base()
@@ -35,28 +36,6 @@ class Jogador(Base):
         """Representação em string do objeto - útil para debug"""
         return f"<Jogador(nome='{self.nome}', email='{self.email}')>"
 
-class Pelada(Base):
-    """
-    Modelo para representar uma pelada/jogo
-    """
-    __tablename__ = "peladas"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    nome = Column(String(200), nullable=False)  # "Pelada de Terça", etc.
-    descricao = Column(String(500), nullable=True)  # Descrição opcional
-    data_hora = Column(DateTime, nullable=False)  # Quando vai acontecer
-    local = Column(String(200), nullable=False)  # Onde vai ser
-    max_jogadores = Column(Integer, default=20)  # Máximo de jogadores
-    valor_por_pessoa = Column(Float, default=0.0)  # Custo por pessoa
-    ativa = Column(Boolean, default=True)  # Se a pelada está ativa
-    data_criacao = Column(DateTime, default=datetime.utcnow)
-    
-    # Relacionamentos
-    # participacoes = relationship("Participacao", back_populates="pelada")
-    
-    def __repr__(self):
-        return f"<Pelada(nome='{self.nome}', data='{self.data_hora}')>"
-
 class Participacao(Base):
     """
     Modelo para relacionar jogadores com peladas
@@ -77,3 +56,149 @@ class Participacao(Base):
     
     def __repr__(self):
         return f"<Participacao(jogador_id={self.jogador_id}, pelada_id={self.pelada_id})>"
+
+
+# ===== NOVAS ENTIDADES PARA SISTEMA DE PELADAS =====
+
+class StatusPelada(enum.Enum):
+    """Status possíveis de uma pelada"""
+    PLANEJADA = "planejada"      # Ainda sendo organizada
+    CONFIRMADA = "confirmada"    # Confirmada, jogadores podem se inscrever
+    EM_ANDAMENTO = "em_andamento"  # Happening now
+    FINALIZADA = "finalizada"    # Acabou
+    CANCELADA = "cancelada"      # Foi cancelada
+
+
+class Pelada(Base):
+    """
+    Entidade Pelada - Um evento esportivo
+    
+    Uma pelada é como um "campeonato de um dia" que pode ter várias partidas
+    Exemplo: "Pelada do Sábado - Parque Ibirapuera"
+    """
+    __tablename__ = "peladas"
+
+    # Campos básicos
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(100), nullable=False, index=True)  # "Pelada do Sábado"
+    descricao = Column(Text, nullable=True)  # Descrição opcional
+    
+    # Data e local
+    data_evento = Column(Date, nullable=False, index=True)  # Dia da pelada
+    local = Column(String(200), nullable=False)  # "Parque Ibirapuera - Campo 2"
+    
+    # Configurações
+    max_jogadores = Column(Integer, default=22)  # Máximo de jogadores (11 x 11)
+    valor_por_jogador = Column(Integer, default=0)  # Em centavos (ex: 2000 = R$ 20,00)
+    
+    # Status e timestamps
+    status = Column(Enum(StatusPelada), default=StatusPelada.PLANEJADA, nullable=False)
+    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    data_atualizacao = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    partidas = relationship("Partida", back_populates="pelada", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<Pelada(id={self.id}, nome='{self.nome}', data='{self.data_evento}')>"
+
+
+class StatusPartida(enum.Enum):
+    """Status possíveis de uma partida"""
+    AGENDADA = "agendada"        # Agendada mas ainda não começou
+    EM_ANDAMENTO = "em_andamento"  # Rolando agora
+    FINALIZADA = "finalizada"    # Acabou
+    CANCELADA = "cancelada"      # Foi cancelada
+
+
+class Partida(Base):
+    """
+    Entidade Partida - Um jogo individual
+    
+    Uma partida é um jogo específico dentro de uma pelada
+    Exemplo: "Jogo 1: Time A vs Time B - 14h às 15h"
+    """
+    __tablename__ = "partidas"
+
+    # Campos básicos
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(100), nullable=True)  # "Jogo 1", "Final", etc (opcional)
+    
+    # Relacionamento com pelada
+    pelada_id = Column(Integer, ForeignKey("peladas.id"), nullable=False)
+    
+    # Horários
+    horario_inicio = Column(DateTime, nullable=True)  # Quando começou de fato
+    horario_fim = Column(DateTime, nullable=True)     # Quando terminou
+    horario_previsto = Column(DateTime, nullable=False)  # Horário agendado
+    
+    # Times (por enquanto, só nomes. Depois podemos melhorar)
+    nome_time_a = Column(String(50), default="Time A")
+    nome_time_b = Column(String(50), default="Time B")
+    
+    # Placar
+    gols_time_a = Column(Integer, default=0)
+    gols_time_b = Column(Integer, default=0)
+    
+    # Observações
+    observacoes = Column(Text, nullable=True)  # "Jogo adiado por chuva", etc
+    
+    # Status
+    status = Column(Enum(StatusPartida), default=StatusPartida.AGENDADA, nullable=False)
+    
+    # Timestamps
+    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    data_atualizacao = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    pelada = relationship("Pelada", back_populates="partidas")
+    gols = relationship("Gol", back_populates="partida", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<Partida(id={self.id}, {self.nome_time_a} {self.gols_time_a} x {self.gols_time_b} {self.nome_time_b})>"
+    
+    @property
+    def placar(self) -> str:
+        """Retorna o placar formatado"""
+        return f"{self.gols_time_a} x {self.gols_time_b}"
+    
+    @property
+    def duracao_minutos(self) -> int:
+        """Calcula duração da partida em minutos"""
+        if self.horario_inicio and self.horario_fim:
+            delta = self.horario_fim - self.horario_inicio
+            return int(delta.total_seconds() / 60)
+        return 0
+
+
+class Gol(Base):
+    """
+    Entidade Gol - Um gol marcado durante uma partida
+    
+    Registra quem fez o gol e quando
+    """
+    __tablename__ = "gols"
+
+    # Campos básicos
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Relacionamentos
+    partida_id = Column(Integer, ForeignKey("partidas.id"), nullable=False)
+    jogador_id = Column(Integer, ForeignKey("jogadores.id"), nullable=False)
+    
+    # Dados do gol
+    minuto = Column(Integer, nullable=False)  # Minuto do jogo (1-90+)
+    time = Column(String(1), nullable=False)  # "A" ou "B"
+    
+    # Observações
+    descricao = Column(String(200), nullable=True)  # "Chute de fora da área", etc
+    
+    # Timestamps
+    data_criacao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relacionamentos
+    partida = relationship("Partida", back_populates="gols")
+    jogador = relationship("Jogador")  # Referência ao jogador que fez o gol
+    
+    def __repr__(self):
+        return f"<Gol(jogador_id={self.jogador_id}, minuto={self.minuto})>"

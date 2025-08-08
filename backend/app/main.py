@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Importa as rotas
-from app.routes import jogadores
+from app.routes import jogadores, peladas, partidas, gols
 from app.database import create_tables
 
 # Cria a instância principal do FastAPI
@@ -52,6 +52,6 @@ async def health_check():
 
 # Inclui as rotas da API
 app.include_router(jogadores.router, prefix="/api", tags=["jogadores"])
-
-# Quando criarmos outras rotas:
-# app.include_router(peladas.router, prefix="/api", tags=["peladas"])
+app.include_router(peladas.router, prefix="/api", tags=["peladas"])
+app.include_router(partidas.router, prefix="/api", tags=["partidas"])
+app.include_router(gols.router, prefix="/api", tags=["gols"])
